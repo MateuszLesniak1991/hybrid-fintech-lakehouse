@@ -1,5 +1,7 @@
-faker
-python-dotenv
-psycopg2-binary
-confluent-kafka
+azure-core==1.41.0
+azure-eventhub==5.15.1
 boto3
+confluent-kafka
+faker
+psycopg2-binary
+python-dotenv
