@@ -30,3 +30,13 @@ Thumbs.db
 
 # Docker local volumes
 docker-data/
+
+# Generated logs and database backups
+logs/
+backups/
+*.dump
+*.sql.gz
+
+# Python cache
+__pycache__/
+*.pyc
