@@ -305,16 +305,6 @@ Detailed documentation is available in the `docs` directory:
 * data quality and reconciliation,
 * realistic banking data simulation.
 
----
-
-## Roadmap
-
-The next implementation stages are:
-
-1. Redpanda to Azure Event Hub bridge.
-2. MinIO to ADLS Gen2 synchronization.
-3. Microsoft Fabric Eventstream configuration.
-4. Databricks Bronze ingestion.
 5. Silver data transformations and quality rules.
 6. Gold analytical models.
 7. Power BI dashboards.
