@@ -5,11 +5,11 @@
 The platform uses a hybrid architecture with local infrastructure and Microsoft Azure services.
 
 ```text
-Simulated banking systems
-        ↓
-Python historical generator
-        ↓
-PostgreSQL
+         Simulated banking systems
+                    ↓
+         Python historical generator
+                    ↓
+               PostgreSQL
    ┌───────────────┴───────────────┐
    ↓                               ↓
 Streaming path                 Batch path
@@ -305,4 +305,3 @@ The repository does not contain:
 - database dumps,
 - generated data,
 - logs.
-
