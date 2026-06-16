@@ -10,11 +10,11 @@ Current status:
 |---|---|
 | Azure Event Hub namespace | Tested |
 | Event Hub message send | Tested |
-| Redpanda to Event Hub bridge | Planned |
-| ADLS Gen2 | Planned |
-| Microsoft Fabric Eventstream | Planned |
-| Databricks | Planned |
-| Power BI | Planned |
+| Redpanda to Event Hub bridge | Tested |
+| ADLS Gen2 | Tested |
+| Microsoft Fabric Eventstream | Tested |
+| Databricks | Tested |
+| Power BI | Tested |
 
 ---
 
