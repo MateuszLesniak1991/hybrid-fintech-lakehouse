@@ -229,12 +229,12 @@ Screenshots are added only after the related component has been implemented and 
 | Redpanda replay pipeline           | Completed |
 | MinIO hourly Parquet export        | Completed |
 | Azure Event Hub connectivity test  | Completed |
-| Redpanda to Event Hub bridge       | Planned   |
-| MinIO to ADLS Gen2 synchronization | Planned   |
-| Microsoft Fabric Eventstream       | Planned   |
-| Databricks Bronze/Silver/Gold      | Planned   |
-| Power BI dashboards                | Planned   |
-| CI/CD                              | Planned   |
+| Redpanda to Event Hub bridge       | Completed |
+| MinIO to ADLS Gen2 synchronization | Completed |
+| Microsoft Fabric Eventstream       | Completed |
+| Databricks Bronze/Silver/Gold      | Completed |
+| Power BI dashboards                | Completed |
+| CI/CD                              | Completed |
 
 ---
 
