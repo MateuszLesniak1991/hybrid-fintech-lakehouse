@@ -5,3 +5,4 @@ confluent-kafka
 faker
 psycopg2-binary
 python-dotenv
+pyarrow==24.0.0
