@@ -305,7 +305,4 @@ Detailed documentation is available in the `docs` directory:
 * data quality and reconciliation,
 * realistic banking data simulation.
 
-5. Silver data transformations and quality rules.
-6. Gold analytical models.
-7. Power BI dashboards.
-8. GitHub Actions CI/CD.
+
