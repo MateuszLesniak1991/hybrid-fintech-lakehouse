@@ -1,42 +1,55 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
 venv/
 .venv/
 env/
 
-# Environment variables
-.env
+# Python cache and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
-# Local data
+# Generated datasets
 data/*
 !data/.gitkeep
+*.csv
+*.parquet
+*.jsonl
 
 # Logs
+logs/
 *.log
 
-# Jupyter
-.ipynb_checkpoints/
+# Database backups and dumps
+backups/
+*.dump
+*.backup
+*.sql.gz
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
-# IDE
-.vscode/
+# Local Docker data
+postgres_data/
+minio_data/
+redpanda_data/
+
+# IDE and operating system files
 .idea/
-
-# OS
+.vscode/
 .DS_Store
 Thumbs.db
 
-# Docker local volumes
-docker-data/
-
-# Generated logs and database backups
-logs/
-backups/
-*.dump
-*.sql.gz
-
-# Python cache
-__pycache__/
-*.pyc
+# Temporary files
+*.tmp
+*.swp
+*.swo
