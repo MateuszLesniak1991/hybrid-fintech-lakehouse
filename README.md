@@ -206,6 +206,33 @@ The replay process completed without delivery errors.
 
 ---
 
+## Azure Event Hub integration
+
+Operational banking events are consumed from Redpanda and forwarded to Azure Event Hub using a restartable Python bridge.
+
+The bridge uses:
+
+- manual Kafka offset commits,
+- batched delivery,
+- retry handling,
+- per-partition offset tracking,
+- offset commit only after successful Event Hub delivery.
+
+### Full bridge result
+
+| Metric | Result |
+|---|---:|
+| Consumed events | 256,906 |
+| Delivered events | 256,906 |
+| Committed events | 256,906 |
+| Event Hub batches | 2,055 |
+| Invalid events | 0 |
+| Failed events | 0 |
+
+![Redpanda to Event Hub summary](images/cloud/redpanda_eventhub_full_summary.png)
+
+![Azure Event Hub full metrics](images/cloud/eventhub_metrics_full.png)
+
 ## Batch implementation
 
 PostgreSQL datasets are exported to MinIO using:
