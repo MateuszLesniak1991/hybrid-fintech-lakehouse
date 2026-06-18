@@ -1,0 +1,523 @@
+# Microsoft Fabric Real-Time Fraud Dashboard
+
+## 1. Purpose
+
+The Microsoft Fabric Real-Time Fraud Dashboard provides operational visibility into high-risk banking transactions processed by the streaming pipeline.
+
+The dashboard is designed for:
+
+- fraud analysts,
+- operational risk teams,
+- security monitoring teams,
+- data engineering teams,
+- technical stakeholders validating the end-to-end streaming platform.
+
+It presents continuously arriving fraud events stored in Microsoft Fabric Eventhouse and queried with KQL.
+
+---
+
+## 2. Streaming context
+
+The dashboard is the presentation layer of the real-time fraud detection path:
+
+```text
+Real-time banking generator
+→ PostgreSQL transactional outbox
+→ Redpanda
+→ Azure Event Hubs
+→ Microsoft Fabric Eventstream
+→ high-risk transaction filter
+→ Fabric Eventhouse
+→ KQL
+→ Real-Time Dashboard
+```
+
+Only events matching the following condition are written to the fraud analytics destination:
+
+```text
+event_type = high_risk_transaction_detected
+```
+
+---
+
+## 3. Fabric components
+
+| Component | Name |
+|---|---|
+| Workspace | `ws-hybrid-fintech-lakehouse` |
+| Eventstream | `es-fraud-detection` |
+| Eventhouse | `evt-fraud-analytics` |
+| KQL database | `evt-fraud-analytics` |
+| Source table | `fraud_events_realtime` |
+| Dashboard | `rtd-fraud-monitoring` |
+
+---
+
+## 4. Source data
+
+The dashboard reads from:
+
+```text
+fraud_events_realtime
+```
+
+The table contains high-risk transaction events delivered through Microsoft Fabric Eventstream.
+
+Relevant fields are extracted from the dynamic `payload` object.
+
+Base query:
+
+```kusto
+fraud_events_realtime
+| extend
+    event_timestamp = todatetime(event_time),
+    transaction_id = tostring(payload.transaction_id),
+    customer_id = tostring(payload.customer_id),
+    merchant_id = tostring(payload.merchant_id),
+    amount = todouble(payload.amount),
+    currency = tostring(payload.currency),
+    risk_score = toint(payload.risk_score),
+    fraud_rule = tostring(payload.fraud_rule_hit),
+    city = tostring(payload.city),
+    country = tostring(payload.country)
+| project
+    event_timestamp,
+    transaction_id,
+    customer_id,
+    merchant_id,
+    amount,
+    currency,
+    risk_score,
+    fraud_rule,
+    city,
+    country
+| order by event_timestamp desc
+```
+
+---
+
+## 5. Dashboard layout
+
+The dashboard uses a single-page operational layout.
+
+```text
+┌────────────────┬────────────────────┬──────────────────┐
+│ Total alerts   │ Suspicious amount  │ Avg risk score   │
+├────────────────────────────────────────────────────────┤
+│ Fraud alerts over time                                 │
+├──────────────────────────┬─────────────────────────────┤
+│ Alerts by fraud rule     │ Suspicious amount by rule   │
+├──────────────────────────┴─────────────────────────────┤
+│ Risk score distribution                                │
+├────────────────────────────────────────────────────────┤
+│ Latest high-risk transactions                          │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Dashboard tiles
+
+## 6.1 Total fraud alerts
+
+Purpose:
+
+- shows the total number of high-risk events stored in Eventhouse.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| summarize fraud_alerts = count()
+```
+
+Visualization:
+
+```text
+Stat
+```
+
+Title:
+
+```text
+Total fraud alerts
+```
+
+---
+
+## 6.2 Suspicious transaction value
+
+Purpose:
+
+- shows the total value of all high-risk transactions.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend amount = todouble(payload.amount)
+| summarize suspicious_amount_mln = round(sum(amount) / 1000000.0, 2)
+| project suspicious_amount_display =
+    strcat(tostring(suspicious_amount_mln), " mln PLN")
+```
+
+Visualization:
+
+```text
+Stat
+```
+
+Title:
+
+```text
+Suspicious transaction value
+```
+
+The value is converted to millions of PLN because the Fabric Stat visual used in this project does not expose a configurable suffix field.
+
+---
+
+## 6.3 Average risk score
+
+Purpose:
+
+- shows the average fraud risk score for high-risk transactions.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend risk_score = toint(payload.risk_score)
+| summarize average_risk_score = round(avg(risk_score), 2)
+```
+
+Visualization:
+
+```text
+Stat
+```
+
+Title:
+
+```text
+Average risk score
+```
+
+---
+
+## 6.4 Fraud alerts over time
+
+Purpose:
+
+- shows the arrival pattern of fraud events,
+- helps identify spikes in suspicious activity.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend event_timestamp = todatetime(event_time)
+| summarize alerts = count()
+    by bin(event_timestamp, 5m)
+| order by event_timestamp asc
+```
+
+Visualization:
+
+```text
+Time chart
+```
+
+Configuration:
+
+```text
+X-axis: event_timestamp
+Y-axis: alerts
+```
+
+Title:
+
+```text
+Fraud alerts over time
+```
+
+---
+
+## 6.5 Alerts by fraud rule
+
+Purpose:
+
+- compares the number of alerts generated by each fraud detection rule.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend fraud_rule = tostring(payload.fraud_rule_hit)
+| summarize alerts = count() by fraud_rule
+| order by alerts desc
+```
+
+Visualization:
+
+```text
+Column chart
+```
+
+Title:
+
+```text
+Alerts by fraud rule
+```
+
+Example fraud rules:
+
+- `HIGH_VALUE_TRANSACTION`,
+- `IMPOSSIBLE_TRAVEL`,
+- `BLACKLISTED_DEVICE`,
+- `VELOCITY_BREACH`,
+- `UNUSUAL_GEOLOCATION`.
+
+---
+
+## 6.6 Suspicious amount by fraud rule
+
+Purpose:
+
+- compares the financial value associated with each fraud rule.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend
+    fraud_rule = tostring(payload.fraud_rule_hit),
+    amount = todouble(payload.amount)
+| summarize suspicious_amount = round(sum(amount), 2)
+    by fraud_rule
+| order by suspicious_amount desc
+```
+
+Visualization:
+
+```text
+Bar chart
+```
+
+Title:
+
+```text
+Suspicious amount by fraud rule
+```
+
+---
+
+## 6.7 Risk score distribution
+
+Purpose:
+
+- groups fraud events into operational risk bands.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend risk_score = toint(payload.risk_score)
+| summarize alerts = count()
+    by risk_band = case(
+        risk_score >= 90, "90–100 Critical",
+        risk_score >= 80, "80–89 High",
+        risk_score >= 70, "70–79 Elevated",
+        "Below 70"
+    )
+| order by alerts desc
+```
+
+Visualization:
+
+```text
+Donut chart
+```
+
+Title:
+
+```text
+Risk score distribution
+```
+
+---
+
+## 6.8 Latest high-risk transactions
+
+Purpose:
+
+- provides a detailed operational view of the most recent fraud events.
+
+Query:
+
+```kusto
+fraud_events_realtime
+| extend
+    event_timestamp = todatetime(event_time),
+    transaction_id = tostring(payload.transaction_id),
+    customer_id = tostring(payload.customer_id),
+    merchant_id = tostring(payload.merchant_id),
+    amount = todouble(payload.amount),
+    currency = tostring(payload.currency),
+    risk_score = toint(payload.risk_score),
+    fraud_rule = tostring(payload.fraud_rule_hit),
+    city = tostring(payload.city),
+    country = tostring(payload.country)
+| project
+    event_timestamp,
+    transaction_id,
+    customer_id,
+    merchant_id,
+    amount,
+    currency,
+    risk_score,
+    fraud_rule,
+    city,
+    country
+| order by event_timestamp desc
+| take 20
+```
+
+Visualization:
+
+```text
+Table
+```
+
+Title:
+
+```text
+Latest high-risk transactions
+```
+
+Displayed columns:
+
+- event timestamp,
+- transaction ID,
+- customer ID,
+- merchant ID,
+- amount,
+- currency,
+- risk score,
+- fraud rule,
+- city,
+- country.
+
+---
+
+## 7. Refresh configuration
+
+The dashboard uses automatic refresh so that new Eventhouse records appear without manual reloading.
+
+Recommended configuration:
+
+```text
+Auto refresh: 30 seconds
+```
+
+This refresh rate is appropriate for a portfolio environment in which new banking transactions are generated every few seconds.
+
+---
+
+## 8. Operational behavior
+
+The dashboard updates as new high-risk events pass through the streaming platform.
+
+Expected sequence:
+
+1. the real-time generator creates a banking transaction,
+2. PostgreSQL stores the transaction and outbox event,
+3. the outbox publisher sends the event to Redpanda,
+4. the Event Hub bridge forwards the event to Azure,
+5. Fabric Eventstream receives the event,
+6. the Eventstream filter selects high-risk transactions,
+7. Eventhouse stores the filtered event,
+8. the dashboard displays the new event after refresh.
+
+---
+
+## 9. Validation
+
+The dashboard is considered operational when:
+
+- the KPI tiles return values,
+- the time chart updates as new events arrive,
+- fraud rules appear in categorical charts,
+- the latest transactions table shows current event timestamps,
+- Eventhouse records and dashboard totals are consistent,
+- the dashboard refreshes without manual intervention.
+
+Recommended validation query:
+
+```kusto
+fraud_events_realtime
+| summarize
+    total_alerts = count(),
+    total_amount = round(sum(todouble(payload.amount)), 2),
+    average_risk_score = round(avg(toint(payload.risk_score)), 2)
+```
+
+The result should be consistent with the three KPI tiles.
+
+---
+
+## 10. Evidence
+
+Recommended repository screenshot:
+
+```text
+images/dashboards/fabric_realtime_fraud_dashboard.png
+```
+
+The screenshot should show:
+
+- dashboard title,
+- KPI tiles,
+- time chart,
+- fraud rule charts,
+- latest high-risk transactions,
+- no credentials or connection strings.
+
+Optional additional screenshots:
+
+```text
+images/dashboards/fabric_dashboard_kpi_tiles.png
+images/dashboards/fabric_dashboard_fraud_rules.png
+images/dashboards/fabric_dashboard_latest_transactions.png
+```
+
+---
+
+## 11. Business value
+
+The dashboard demonstrates how a bank can convert operational transaction events into actionable fraud monitoring information.
+
+Business benefits include:
+
+- near real-time visibility into suspicious transactions,
+- faster identification of fraud spikes,
+- analysis of the most frequently triggered fraud rules,
+- monitoring of total suspicious transaction value,
+- prioritization based on risk score,
+- immediate access to recent high-risk transaction details.
+
+---
+
+## 12. Engineering concepts demonstrated
+
+The dashboard demonstrates:
+
+- Microsoft Fabric Real-Time Intelligence,
+- Eventhouse-based analytics,
+- KQL query design,
+- dynamic JSON payload parsing,
+- time-window aggregation,
+- operational KPI design,
+- near real-time data visualization,
+- integration of streaming and analytical layers,
+- end-to-end validation of a fraud detection pipeline.
