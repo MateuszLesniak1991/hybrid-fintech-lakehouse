@@ -774,6 +774,7 @@ Detailed documentation is available in the `docs` directory:
 * [Data quality](docs/08_data_quality.md)
 * [CI/CD design](docs/09_ci_cd_plan.md)
 * [Project results](docs/10_project_results.md)
+* [Microsoft Fabric Real-Time Fraud Dashboard](docs/11_fabric_realtime_dashboard.md)
 * [Architecture Decision Records](docs/adr/)
 
 ---
