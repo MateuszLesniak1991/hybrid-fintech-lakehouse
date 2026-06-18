@@ -81,7 +81,7 @@ Simulated banking systems
 → PostgreSQL
 → scheduled hourly Parquet export
 → MinIO Bronze
-→ MinIO to ADLS synchronization
+→ scheduled hourly MinIO-to-ADLS synchronization
 → ADLS Gen2 Bronze
 ```
 
@@ -490,6 +490,75 @@ Low-volume datasets contain files only for hours in which records were generated
 
 The local Bronze layer is synchronized from MinIO to Azure Data Lake Storage Gen2.
 
+### Automated hourly ADLS synchronization
+
+A dedicated wrapper synchronizes only the transaction partition created for the previous completed UTC hour.
+
+Wrapper script:
+
+```text
+scripts/run_hourly_adls_sync.sh
+```
+
+Schedule:
+
+```cron
+15 * * * * /home/dataeng/portfolio/hybrid-fintech-lakehouse/scripts/run_hourly_adls_sync.sh
+```
+
+The hourly synchronization runs ten minutes after the MinIO export:
+
+```text
+:05 → PostgreSQL to MinIO hourly export
+:15 → MinIO to ADLS hourly synchronization
+```
+
+The wrapper:
+
+1. calculates the previous completed UTC hour,
+2. builds the exact MinIO prefix for that partition,
+3. prevents overlapping executions with a file lock,
+4. synchronizes only the selected partition,
+5. skips an existing Azure blob when its size matches,
+6. preserves the complete object path,
+7. writes a dedicated execution log.
+
+Example synchronized prefix:
+
+```text
+banking/transactions/
+year=2026/month=06/day=18/hour=10/
+```
+
+Example result:
+
+```text
+Discovered files: 1
+Uploaded files:   1
+Skipped files:    0
+Failed files:     0
+Uploaded size MB: 0.11
+```
+
+A repeated execution for the same partition is idempotent:
+
+```text
+Discovered files: 1
+Uploaded files:   0
+Skipped files:    1
+Failed files:     0
+```
+
+This completes the automated incremental batch path:
+
+```text
+PostgreSQL
+→ closed-hour Parquet export
+→ MinIO Bronze
+→ partition-level synchronization
+→ ADLS Gen2 Bronze
+```
+
 Synchronization script:
 
 ```text
@@ -578,6 +647,12 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 
 ![ADLS full synchronization summary](images/cloud/adls_full_sync_summary.png)
 
+### Automated hourly ADLS synchronization
+
+![Hourly ADLS sync success](images/batch/hourly_adls_sync_success.png)
+
+![Hourly ADLS sync idempotency](images/batch/hourly_adls_sync_idempotent.png)
+
 ---
 
 ## Technology stack
@@ -626,6 +701,8 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 | ADLS Gen2 Storage Account                       | Completed |
 | ADLS Gen2 Bronze container                      | Completed |
 | MinIO to ADLS synchronization                   | Completed |
+| Automated hourly MinIO to ADLS synchronization   | Completed |
+| Partition-level incremental cloud synchronization | Completed |
 | Restartable and idempotent file synchronization | Completed |
 | Project documentation                           | Completed |
 | Architecture Decision Records                   | Completed |
@@ -668,6 +745,7 @@ hybrid-fintech-lakehouse/
 │   └── source/
 │       └── 01_banking_source_schema.sql
 ├── scripts/
+│   ├── run_hourly_adls_sync.sh
 │   ├── run_hourly_minio_export.sh
 │   ├── run_realtime_streaming.sh
 │   └── stop_realtime_streaming.sh
@@ -719,6 +797,8 @@ Detailed documentation is available in the `docs` directory:
 * cron-based batch scheduling,
 * overlap prevention with file locking,
 * incremental export of closed hourly windows,
+* partition-level MinIO-to-ADLS synchronization,
+* idempotent hourly cloud replication,
 * hourly Parquet partitioning,
 * Snappy compression,
 * S3-compatible object storage,
@@ -752,6 +832,7 @@ Banking data simulation
 → PostgreSQL source system
 → scheduled closed-hour Parquet export
 → MinIO local Bronze
+→ scheduled partition-level synchronization
 → ADLS Gen2 cloud Bronze
 ```
 
@@ -762,6 +843,7 @@ The platform contains:
 * 31 days of historical activity,
 * 744 historical hourly transaction partitions,
 * continuously created hourly partitions for new transactions,
+* automated hourly replication of new transaction partitions to ADLS Gen2,
 * approximately 2,764 Parquet files,
 * complete local and cloud Bronze storage,
 * zero Redpanda replay delivery errors.
