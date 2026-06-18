@@ -40,3 +40,8 @@ backups/
 # Python cache
 __pycache__/
 *.pyc
+
+# Local runtime and environment backups
+.env.backup_*
+run/
+logs/realtime/

@@ -5,6 +5,7 @@ Sends one test banking event to Azure Event Hub.
 
 import json
 import os
+import uuid
 from datetime import datetime, timezone
 
 from azure.eventhub import EventData, EventHubProducerClient
@@ -29,11 +30,10 @@ def main() -> None:
 
     producer = EventHubProducerClient.from_connection_string(
         conn_str=connection_string,
-        eventhub_name=eventhub_name,
     )
 
     event = {
-        "event_id": "portfolio-test-event",
+        "event_id": f"portfolio-test-{uuid.uuid4()}",
         "event_time": datetime.now(timezone.utc).isoformat(),
         "event_type": "high_risk_transaction_detected",
         "source_system": "redpanda_bridge_test",

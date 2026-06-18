@@ -151,7 +151,6 @@ def create_producer() -> EventHubProducerClient:
         conn_str=required_env(
             "AZURE_EVENTHUB_CONNECTION_STRING"
         ),
-        eventhub_name=required_env("AZURE_EVENTHUB_NAME"),
         retry_total=5,
         retry_backoff_factor=0.8,
     )
