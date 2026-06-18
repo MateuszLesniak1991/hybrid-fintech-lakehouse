@@ -2,12 +2,12 @@
 
 Hybrid FinTech Lakehouse Platform is a Data Engineering portfolio project that simulates realistic banking operations and processes data through batch and streaming pipelines.
 
-The implemented platform combines local infrastructure with Azure Data Lake Storage Gen2 and demonstrates:
+The implemented platform combines local infrastructure, Azure services and Microsoft Fabric and demonstrates:
 
 * realistic banking data generation,
 * historical transaction processing,
 * Kafka-compatible event streaming,
-* hourly batch processing,
+* automated hourly batch processing,
 * Parquet-based data lake storage,
 * hybrid on-premises and cloud data replication.
 
@@ -79,11 +79,13 @@ This makes it possible to demonstrate both historical replay and true continuous
 ```text
 Simulated banking systems
 → PostgreSQL
-→ hourly Parquet export
+→ scheduled hourly Parquet export
 → MinIO Bronze
 → MinIO to ADLS synchronization
 → ADLS Gen2 Bronze
 ```
+
+The batch path continuously exports the previous completed UTC hour. A cron job runs the wrapper script at five minutes past every hour, creating one Parquet file for the closed hourly partition without resetting or reprocessing the full historical dataset.
 
 The batch pipeline supports:
 
@@ -412,6 +414,51 @@ The transaction dataset contains:
 31 days × 24 hours = 744 hourly files
 ```
 
+### Automated hourly MinIO export
+
+The continuous batch process exports only the previous completed UTC hour.
+
+Wrapper script:
+
+```text
+scripts/run_hourly_minio_export.sh
+```
+
+Schedule:
+
+```cron
+5 * * * * /home/dataeng/portfolio/hybrid-fintech-lakehouse/scripts/run_hourly_minio_export.sh
+```
+
+The wrapper:
+
+1. calculates the previous completed UTC hour,
+2. prevents overlapping executions with a file lock,
+3. runs the PostgreSQL-to-MinIO exporter for the hourly range,
+4. skips snapshots and daily balances,
+5. avoids overwriting an existing valid partition,
+6. writes a dedicated execution log.
+
+Example execution:
+
+```text
+Start:     2026-06-18T09:00:00+00:00
+End:       2026-06-18T09:59:59.999999+00:00
+Partition: 2026-06-18_09
+Records:   171
+Files:     1
+```
+
+Generated object:
+
+```text
+s3://bronze/banking/transactions/
+year=2026/month=06/day=18/hour=09/
+transactions_20260618_09.parquet
+```
+
+This process allows newly generated real-time transactions to be collected into hourly Bronze partitions without replaying the entire historical dataset.
+
 ### Batch export results
 
 | Dataset                | Files | Approximate size |
@@ -505,6 +552,16 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 
 ![MinIO hourly partitions](images/batch/minio_hourly_partitions.png)
 
+### Automated hourly MinIO export
+
+![Hourly MinIO export success](images/batch/hourly_minio_export_success.png)
+
+![MinIO real-time hourly partition](images/batch/minio_realtime_hourly_partition.png)
+
+![Hourly MinIO cron schedule](images/batch/hourly_minio_cron_schedule.png)
+
+![Hourly MinIO cron execution](images/batch/hourly_minio_cron_execution.png)
+
 ---
 
 ## Cloud platform evidence
@@ -536,6 +593,7 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 | File format          | Apache Parquet               |
 | Compression          | Snappy                       |
 | Local orchestration  | Docker Compose               |
+| Batch scheduling      | Cron and Bash                 |
 | Cloud integration    | Azure Storage SDK for Python |
 | Event ingestion      | Azure Event Hubs              |
 | Stream processing    | Microsoft Fabric Eventstream  |
@@ -562,6 +620,8 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 | Fraud event filtering                             | Completed |
 | Eventhouse and KQL fraud analysis                 | Completed |
 | Hourly Parquet export                           | Completed |
+| Automated hourly PostgreSQL to MinIO schedule    | Completed |
+| Overlap-safe hourly batch wrapper                | Completed |
 | MinIO Bronze layer                              | Completed |
 | ADLS Gen2 Storage Account                       | Completed |
 | ADLS Gen2 Bronze container                      | Completed |
@@ -608,6 +668,7 @@ hybrid-fintech-lakehouse/
 │   └── source/
 │       └── 01_banking_source_schema.sql
 ├── scripts/
+│   ├── run_hourly_minio_export.sh
 │   ├── run_realtime_streaming.sh
 │   └── stop_realtime_streaming.sh
 ├── streaming/
@@ -655,6 +716,9 @@ Detailed documentation is available in the `docs` directory:
 * Eventhouse and KQL analytics,
 * idempotent event delivery,
 * restartable data pipelines,
+* cron-based batch scheduling,
+* overlap prevention with file locking,
+* incremental export of closed hourly windows,
 * hourly Parquet partitioning,
 * Snappy compression,
 * S3-compatible object storage,
@@ -686,6 +750,7 @@ Banking transaction generator
 Batch path:
 Banking data simulation
 → PostgreSQL source system
+→ scheduled closed-hour Parquet export
 → MinIO local Bronze
 → ADLS Gen2 cloud Bronze
 ```
@@ -695,7 +760,8 @@ The platform contains:
 * 250,000 banking transactions,
 * 259,826 operational events,
 * 31 days of historical activity,
-* 744 hourly transaction partitions,
+* 744 historical hourly transaction partitions,
+* continuously created hourly partitions for new transactions,
 * approximately 2,764 Parquet files,
 * complete local and cloud Bronze storage,
 * zero Redpanda replay delivery errors.
