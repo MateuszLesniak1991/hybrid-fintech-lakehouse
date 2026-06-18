@@ -38,6 +38,26 @@ Only events matching the following condition are written to the fraud analytics 
 event_type = high_risk_transaction_detected
 ```
 
+### Architecture evidence
+
+Create a screenshot showing the complete Fabric Eventstream flow:
+
+```text
+Azure Event Hubs source
+→ high-risk transaction filter
+→ Eventhouse destination
+```
+
+Save it in:
+
+```text
+images/dashboards/fabric_eventstream_fraud_flow.png
+```
+
+Add the screenshot to this document:
+
+![Microsoft Fabric Eventstream fraud flow](../images/dashboards/fabric_eventstream_fraud_flow.png)
+
 ---
 
 ## 3. Fabric components
@@ -113,6 +133,18 @@ The dashboard uses a single-page operational layout.
 │ Latest high-risk transactions                          │
 └────────────────────────────────────────────────────────┘
 ```
+
+Create one full-dashboard screenshot showing the complete layout.
+
+Save it in:
+
+```text
+images/dashboards/fabric_realtime_fraud_dashboard.png
+```
+
+Add it to this document:
+
+![Microsoft Fabric Real-Time Fraud Dashboard](../images/dashboards/fabric_realtime_fraud_dashboard.png)
 
 ---
 
@@ -202,6 +234,24 @@ Title:
 ```text
 Average risk score
 ```
+
+### KPI screenshot
+
+Create a screenshot containing all three KPI tiles:
+
+- Total fraud alerts,
+- Suspicious transaction value,
+- Average risk score.
+
+Save it in:
+
+```text
+images/dashboards/fabric_dashboard_kpi_tiles.png
+```
+
+Add it to this document:
+
+![Fabric fraud dashboard KPI tiles](../images/dashboards/fabric_dashboard_kpi_tiles.png)
 
 ---
 
@@ -310,6 +360,23 @@ Title:
 Suspicious amount by fraud rule
 ```
 
+### Fraud-rule charts screenshot
+
+Create a screenshot showing both fraud-rule visualizations:
+
+- Alerts by fraud rule,
+- Suspicious amount by fraud rule.
+
+Save it in:
+
+```text
+images/dashboards/fabric_dashboard_fraud_rules.png
+```
+
+Add it to this document:
+
+![Fabric fraud-rule analytics](../images/dashboards/fabric_dashboard_fraud_rules.png)
+
 ---
 
 ## 6.7 Risk score distribution
@@ -408,6 +475,26 @@ Displayed columns:
 - city,
 - country.
 
+### Latest-transactions screenshot
+
+Create a screenshot showing the newest rows in the table, including:
+
+- event timestamps,
+- transaction IDs,
+- amounts,
+- risk scores,
+- fraud rules.
+
+Save it in:
+
+```text
+images/dashboards/fabric_dashboard_latest_transactions.png
+```
+
+Add it to this document:
+
+![Latest high-risk transactions](../images/dashboards/fabric_dashboard_latest_transactions.png)
+
 ---
 
 ## 7. Refresh configuration
@@ -466,29 +553,143 @@ The result should be consistent with the three KPI tiles.
 
 ---
 
-## 10. Evidence
+## 10. Evidence and screenshot checklist
 
-Recommended repository screenshot:
+The dashboard documentation should include the following screenshots.
+
+### 10.1 Eventstream fraud flow
+
+Capture:
+
+- Azure Event Hubs source,
+- high-risk transaction filter,
+- Eventhouse destination,
+- visible connection lines between the components.
+
+Save as:
+
+```text
+images/dashboards/fabric_eventstream_fraud_flow.png
+```
+
+Used in this document:
+
+![Microsoft Fabric Eventstream fraud flow](../images/dashboards/fabric_eventstream_fraud_flow.png)
+
+### 10.2 Full Real-Time Dashboard
+
+Capture the complete dashboard with:
+
+- dashboard title,
+- all KPI tiles,
+- fraud alerts over time,
+- fraud-rule charts,
+- risk distribution,
+- latest transactions table.
+
+Save as:
 
 ```text
 images/dashboards/fabric_realtime_fraud_dashboard.png
 ```
 
-The screenshot should show:
+Used in this document:
 
-- dashboard title,
-- KPI tiles,
-- time chart,
-- fraud rule charts,
-- latest high-risk transactions,
-- no credentials or connection strings.
+![Microsoft Fabric Real-Time Fraud Dashboard](../images/dashboards/fabric_realtime_fraud_dashboard.png)
 
-Optional additional screenshots:
+### 10.3 KPI tiles
+
+Capture a close-up of:
+
+- Total fraud alerts,
+- Suspicious transaction value,
+- Average risk score.
+
+Save as:
 
 ```text
 images/dashboards/fabric_dashboard_kpi_tiles.png
+```
+
+Used in this document:
+
+![Fabric fraud dashboard KPI tiles](../images/dashboards/fabric_dashboard_kpi_tiles.png)
+
+### 10.4 Fraud-rule visualizations
+
+Capture:
+
+- Alerts by fraud rule,
+- Suspicious amount by fraud rule,
+- readable fraud-rule labels.
+
+Save as:
+
+```text
 images/dashboards/fabric_dashboard_fraud_rules.png
+```
+
+Used in this document:
+
+![Fabric fraud-rule analytics](../images/dashboards/fabric_dashboard_fraud_rules.png)
+
+### 10.5 Latest high-risk transactions
+
+Capture the table with recent fraud events and visible columns such as:
+
+- event timestamp,
+- transaction ID,
+- amount,
+- risk score,
+- fraud rule.
+
+Save as:
+
+```text
 images/dashboards/fabric_dashboard_latest_transactions.png
+```
+
+Used in this document:
+
+![Latest high-risk transactions](../images/dashboards/fabric_dashboard_latest_transactions.png)
+
+### 10.6 Optional KQL validation
+
+Capture the KQL result used to validate dashboard KPIs.
+
+Save as:
+
+```text
+images/dashboards/fabric_dashboard_kql_validation.png
+```
+
+Used in this document:
+
+![KQL validation of dashboard metrics](../images/dashboards/fabric_dashboard_kql_validation.png)
+
+### Screenshot guidelines
+
+Before taking screenshots:
+
+- enable the dashboard refresh,
+- wait for fresh events,
+- make sure chart labels are readable,
+- hide browser bookmarks and unrelated tabs,
+- do not expose connection strings, access keys or tenant details,
+- use consistent browser zoom,
+- crop screenshots to the relevant Fabric content.
+
+Recommended folder structure:
+
+```text
+images/
+└── dashboards/
+    ├── fabric_eventstream_fraud_flow.png
+    ├── fabric_realtime_fraud_dashboard.png
+    ├── fabric_dashboard_kpi_tiles.png
+    ├── fabric_dashboard_fraud_rules.png
+    ├── fabric_dashboard_latest_transactions.png
+    └── fabric_dashboard_kql_validation.png
 ```
 
 ---
