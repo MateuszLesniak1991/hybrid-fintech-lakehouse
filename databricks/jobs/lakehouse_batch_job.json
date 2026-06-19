@@ -1,0 +1,51 @@
+{
+  "name": "job-hybrid-fintech-lakehouse-batch",
+  "email_notifications": {},
+  "timeout_seconds": 0,
+  "max_concurrent_runs": 1,
+  "tasks": [
+    {
+      "task_key": "bronze_to_silver_transactions",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-user>/hybrid-fintech-lakehouse/databricks/notebooks/01_bronze_to_silver_transactions"
+      },
+      "existing_cluster_id": "<cluster-id>"
+    },
+    {
+      "task_key": "silver_to_gold_marts",
+      "depends_on": [
+        {
+          "task_key": "bronze_to_silver_transactions"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-user>/hybrid-fintech-lakehouse/databricks/notebooks/02_silver_to_gold_marts"
+      },
+      "existing_cluster_id": "<cluster-id>"
+    },
+    {
+      "task_key": "data_quality_checks",
+      "depends_on": [
+        {
+          "task_key": "silver_to_gold_marts"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-user>/hybrid-fintech-lakehouse/databricks/notebooks/03_data_quality_checks"
+      },
+      "existing_cluster_id": "<cluster-id>"
+    },
+    {
+      "task_key": "optimize_delta_tables",
+      "depends_on": [
+        {
+          "task_key": "data_quality_checks"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Workspace/Users/<your-user>/hybrid-fintech-lakehouse/databricks/notebooks/04_optimize_delta_tables"
+      },
+      "existing_cluster_id": "<cluster-id>"
+    }
+  ]
+}
