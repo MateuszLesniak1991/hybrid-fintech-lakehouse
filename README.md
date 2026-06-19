@@ -9,7 +9,8 @@ The implemented platform combines local infrastructure, Azure services and Micro
 * Kafka-compatible event streaming,
 * automated hourly batch processing,
 * Parquet-based data lake storage,
-* hybrid on-premises and cloud data replication.
+* hybrid on-premises and cloud data replication,
+* Microsoft Fabric and Power BI fraud analytics.
 
 ---
 
@@ -48,7 +49,8 @@ Simulated banking systems
 → Microsoft Fabric Eventstream
 → fraud filter
 → Eventhouse / KQL database
-→ real-time fraud analysis
+→ Fabric Real-Time Dashboard
+→ Power BI fraud monitoring report
 ```
 
 The streaming path supports both historical replay and continuously generated banking events.
@@ -361,7 +363,7 @@ fraud_events_realtime
 | order by events desc
 ```
 
-The resulting Eventhouse dataset is ready for real-time dashboards and Power BI reporting.
+The resulting Eventhouse dataset is used by both a Microsoft Fabric Real-Time Dashboard and a Power BI fraud monitoring report.
 
 ### Fabric evidence
 
@@ -370,6 +372,73 @@ The resulting Eventhouse dataset is ready for real-time dashboards and Power BI 
 ![Fabric Eventhouse fraud data](images/cloud/fabric_fraud_eventhouse_data.png)
 
 ![Fabric KQL fraud analysis](images/cloud/fabric_fraud_kql_analysis.png)
+
+---
+
+## Power BI fraud monitoring report
+
+A Power BI report was created on top of the Fabric Eventhouse / KQL database to provide a business-oriented fraud monitoring layer.
+
+Power BI report:
+
+```text
+pbi-realtime-fraud-monitoring
+```
+
+Reporting function:
+
+```text
+fraud_events_powerbi()
+```
+
+The KQL reporting function flattens the Eventhouse fraud event payload and unifies historical replay events with continuously generated real-time events.
+
+The report combines:
+
+```text
+event_timestamp              = processing / streaming timestamp
+business_event_timestamp     = original event timestamp for historical replay,
+                               or processing timestamp for real-time events
+source_category              = historical_replay or core_banking_realtime
+```
+
+This allows the report to analyze both historical and real-time fraud events in one model.
+
+Main report metrics:
+
+| Metric | Description |
+|---|---|
+| Total Fraud Alerts | Total number of high-risk transaction events |
+| Suspicious Amount | Total suspicious transaction value |
+| Average Risk Score | Average fraud risk score |
+| Affected Customers | Distinct customers affected by fraud alerts |
+| Affected Merchants | Distinct merchants affected by fraud alerts |
+
+Main report visuals:
+
+* fraud alerts over business time,
+* alerts by fraud rule,
+* suspicious amount by fraud rule,
+* latest high-risk transactions,
+* slicers for risk score, business event timestamp, fraud rule and country.
+
+### Power BI evidence
+
+![Power BI real-time fraud report](images/dashboards/powerbi_realtime_fraud_report.png)
+
+![Power BI fraud KPI tiles](images/dashboards/powerbi_fraud_kpi_tiles.png)
+
+![Power BI fraud rules analysis](images/dashboards/powerbi_fraud_rules_analysis.png)
+
+![Power BI fraud alerts over time](images/dashboards/powerbi_fraud_alerts_over_time.png)
+
+![Power BI latest high-risk transactions](images/dashboards/powerbi_latest_high_risk_transactions.png)
+
+![Power BI DirectQuery KQL connection](images/dashboards/powerbi_directquery_kql_connection.png)
+
+![Power BI fraud data model](images/dashboards/powerbi_fraud_data_model.png)
+
+![Power BI KQL reporting function](images/dashboards/powerbi_kql_reporting_function.png)
 
 ## Batch implementation
 
@@ -673,7 +742,7 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 | Event ingestion      | Azure Event Hubs              |
 | Stream processing    | Microsoft Fabric Eventstream  |
 | Real-time analytics  | Fabric Eventhouse and KQL     |
-| BI integration       | Power BI-ready semantic layer |
+| BI integration       | Power BI Desktop report        |
 | Version control      | Git and GitHub                |
 
 ---
@@ -694,6 +763,9 @@ The synchronization preserves the complete folder hierarchy from MinIO.
 | Microsoft Fabric Eventstream                      | Completed |
 | Fraud event filtering                             | Completed |
 | Eventhouse and KQL fraud analysis                 | Completed |
+| Fabric Real-Time Fraud Dashboard                  | Completed |
+| KQL reporting function for Power BI               | Completed |
+| Power BI fraud monitoring report                  | Completed |
 | Hourly Parquet export                           | Completed |
 | Automated hourly PostgreSQL to MinIO schedule    | Completed |
 | Overlap-safe hourly batch wrapper                | Completed |
@@ -775,6 +847,7 @@ Detailed documentation is available in the `docs` directory:
 * [CI/CD design](docs/09_ci_cd_plan.md)
 * [Project results](docs/10_project_results.md)
 * [Microsoft Fabric Real-Time Fraud Dashboard](docs/11_fabric_realtime_dashboard.md)
+* [Power BI Fraud Monitoring Report](docs/12_powerbi_fraud_monitoring.md)
 * [Architecture Decision Records](docs/adr/)
 
 ---
@@ -793,6 +866,8 @@ Detailed documentation is available in the `docs` directory:
 * Microsoft Fabric Eventstream processing,
 * real-time fraud filtering,
 * Eventhouse and KQL analytics,
+* Power BI DirectQuery reporting,
+* unified business-time and processing-time analytics,
 * idempotent event delivery,
 * restartable data pipelines,
 * cron-based batch scheduling,
@@ -825,6 +900,8 @@ Banking transaction generator
 → Azure Event Hubs
 → Microsoft Fabric Eventstream
 → Eventhouse / KQL
+→ Fabric Real-Time Dashboard
+→ Power BI fraud monitoring report
 ```
 
 ```text
@@ -847,4 +924,5 @@ The platform contains:
 * automated hourly replication of new transaction partitions to ADLS Gen2,
 * approximately 2,764 Parquet files,
 * complete local and cloud Bronze storage,
-* zero Redpanda replay delivery errors.
+* zero Redpanda replay delivery errors,
+* Power BI report for historical and real-time fraud monitoring.
